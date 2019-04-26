@@ -1,0 +1,25 @@
+[package]
+name = "unstructured"
+description = "Generic types for unstructured data"
+repository = "https://github.com/proctorlabs/unstructured-rs"
+version = "0.1.0-pre"
+authors = ["Phil Proctor <philliptproctor@gmail.com>"]
+edition = "2018"
+keywords = ["unstructured", "data"]
+categories = ["network-programming", "web-programming::http-server", "web-programming"]
+license = "MIT"
+readme = "README.md"
+
+[dependencies]
+serde = "1.0"
+
+[dev-dependencies]
+serde_json = "1.0"
+serde_yaml = "0.8"
+
+[lib]
+name = "unstructured"
+path = "src/lib.rs"
+
+[badges]
+maintenance = { status = "experimental" }
