@@ -1,27 +1,23 @@
 use super::*;
 
-const TEST_JSON: &str = r#"{
+const PARSE_MAP_STR: &[&str] = &[
+    r#"{
     "some": "val"
-}"#;
+}"#,
+    r#"
+some: val
+"#,
+];
 
-const TEST_YAML: &str = r#"
----
-- this
-- is
-- an
-- array
-"#;
-
-#[test]
-fn basic_object() {
-    let val: Value = serde_json::from_str(TEST_JSON).unwrap();
-    println!("{:?}", val);
+fn parse(index: usize, s: &str) -> Value {
+    match index {
+        0 => serde_json::from_str(s).unwrap(),
+        _ => serde_yaml::from_str(s).unwrap(),
+    }
 }
 
-#[test]
-fn basic_array() {
-    let val: Value = serde_yaml::from_str(TEST_YAML).unwrap();
+#[rstest_parametrize(index, case(0), case(1))]
+fn basic_object(index: usize) {
+    let val: Value = parse(index, PARSE_MAP_STR[index]);
     println!("{:?}", val);
-    let lis: Vec<String> = val.try_into().unwrap();
-    println!("{:?}", lis);
 }

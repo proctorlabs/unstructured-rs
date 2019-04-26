@@ -4,6 +4,10 @@
 extern crate serde;
 
 #[cfg(test)]
+#[macro_use]
+extern crate rstest;
+
+#[cfg(test)]
 mod test;
 
 mod de;
