@@ -1,80 +1,39 @@
-use std::borrow::Cow;
+use super::Document;
 
-use crate::*;
-
-macro_rules! from_integer {
-    ($($ty:ident)*) => {
+macro_rules! from_imp {
+    ($($ty:ident, $v:ident)*) => {
         $(
-            impl From<$ty> for Value {
+            impl From<$ty> for Document {
                 fn from(n: $ty) -> Self {
-                    Value::Number(n.into())
+                    Document::$v(n)
                 }
             }
         )*
     };
 }
 
-from_integer! {
-    i8 i16 i32 i64 isize
-    u8 u16 u32 u64 usize
+from_imp! {
+    i8,I8 i16,I16 i32,I32 i64,I64
+    u8,U8 u16,U16 u32,U32 u64,U64
+    f32,F32 f64,F64
+    bool,Bool char,Char
+    String,String
 }
 
-impl From<f32> for Value {
-    fn from(f: f32) -> Self {
-        From::from(f as f64)
+impl From<&str> for Document {
+    fn from(n: &str) -> Self {
+        Document::String(n.into())
     }
 }
 
-impl From<f64> for Value {
-    fn from(f: f64) -> Self {
-        Number::from_f64(f).map_or(Value::Null, Value::Number)
+impl From<Vec<u8>> for Document {
+    fn from(n: Vec<u8>) -> Self {
+        Document::Bytes(n)
     }
 }
 
-impl From<bool> for Value {
-    fn from(f: bool) -> Self {
-        Value::Bool(f)
-    }
-}
-
-impl From<String> for Value {
-    fn from(f: String) -> Self {
-        Value::Text(f)
-    }
-}
-
-impl<'a> From<&'a str> for Value {
-    fn from(f: &str) -> Self {
-        Value::Text(f.to_string())
-    }
-}
-
-impl<'a> From<Cow<'a, str>> for Value {
-    fn from(f: Cow<'a, str>) -> Self {
-        Value::Text(f.into_owned())
-    }
-}
-
-impl From<Map<String, Value>> for Value {
-    fn from(f: Map<String, Value>) -> Self {
-        Value::Map(f)
-    }
-}
-
-impl<T: Into<Value>> From<Vec<T>> for Value {
-    fn from(f: Vec<T>) -> Self {
-        Value::Array(f.into_iter().map(Into::into).collect())
-    }
-}
-
-impl<'a, T: Clone + Into<Value>> From<&'a [T]> for Value {
-    fn from(f: &'a [T]) -> Self {
-        Value::Array(f.iter().cloned().map(Into::into).collect())
-    }
-}
-
-impl<T: Into<Value>> ::std::iter::FromIterator<T> for Value {
-    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
-        Value::Array(iter.into_iter().map(Into::into).collect())
+impl From<Vec<Document>> for Document {
+    fn from(n: Vec<Document>) -> Self {
+        Document::Seq(n)
     }
 }
