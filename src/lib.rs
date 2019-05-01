@@ -131,10 +131,8 @@ use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::mem;
 
-use self::ser::Serializer;
-
-pub use de::*;
-pub use ser::*;
+use de::*;
+use ser::*;
 
 mod de;
 mod from;

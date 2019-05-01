@@ -331,10 +331,6 @@ impl<E> DocumentDeserializer<E> {
             error: Default::default(),
         }
     }
-
-    pub fn into_document(self) -> Document {
-        self.document
-    }
 }
 
 impl<'de, E> de::Deserializer<'de> for DocumentDeserializer<E>
