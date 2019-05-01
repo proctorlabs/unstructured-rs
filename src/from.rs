@@ -1,4 +1,5 @@
 use super::Document;
+use std::collections::BTreeMap;
 
 macro_rules! from_imp {
     ($($ty:ident, $v:ident)*) => {
@@ -35,5 +36,11 @@ impl From<Vec<u8>> for Document {
 impl From<Vec<Document>> for Document {
     fn from(n: Vec<Document>) -> Self {
         Document::Seq(n)
+    }
+}
+
+impl From<BTreeMap<Document, Document>> for Document {
+    fn from(n: BTreeMap<Document, Document>) -> Self {
+        Document::Map(n)
     }
 }

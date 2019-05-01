@@ -8,10 +8,19 @@ fn numeric_indexing_test() {
 }
 
 #[test]
+fn from_pointer() {
+    let doc: Document =
+        serde_json::from_str("{\"some\": {\"nested\": {\"value\": \"is this value\"}}}").unwrap();
+    let doc_element = doc.pointer("/some/nested/value").unwrap();
+    println!("{}", doc_element);
+}
+
+#[test]
 fn map_indexing_test() {
     let mut map = BTreeMap::new();
-    map.insert(Document::String("test".to_owned()), Document::U64(100));
-    let doc = Document::Map(map);
+    map.insert("test".into(), (100 as u64).into());
+    let doc: Document = map.into();
+    println!("{}", doc["test"] == Document::U64(100));
     assert_eq!(doc["test"], Document::U64(100));
     assert_eq!(doc["test-not-exist"], Document::Unit);
     assert_eq!(doc[100][9999], Document::Unit);
