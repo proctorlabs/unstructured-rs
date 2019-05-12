@@ -137,6 +137,7 @@ use ser::*;
 mod de;
 mod from;
 mod index;
+mod selector;
 mod ser;
 
 #[derive(Clone, Debug)]
@@ -258,6 +259,7 @@ impl Ord for Document {
 macro_rules! impl_is_as {
     ($($is:ident, $as:ident, $take:ident, $v:ident, $r:ty);*) => {
         $(
+            /// Check whether this Document is a $r
             pub fn $is(&self) -> bool {
                 match self {
                     Document::$v(_) => true,
@@ -265,6 +267,8 @@ macro_rules! impl_is_as {
                 }
             }
 
+            /// Retrieve the value of this Document as $r .
+            /// This will return None if the document type is not Document::$v
             pub fn $as(&self) -> Option<$r> {
                 match self {
                     Document::$v(r) => Some(r.to_owned()),
@@ -272,6 +276,9 @@ macro_rules! impl_is_as {
                 }
             }
 
+            /// Move the value of this document out of the object if is is an $r.
+            /// This will return None and leave the Document unchanged if the type does not match.
+            /// When the value is moved out, a Document::Unit is left in its place.
             pub fn $take(&mut self) -> Option<$r> {
                 if self.$is() {
                     let r = mem::replace(self, Document::Unit);
@@ -311,67 +318,6 @@ impl Document {
         mem::replace(self, new_val)
     }
 
-    pub fn pointer<'a>(&'a self, pointer: &str) -> Option<&'a Document> {
-        if pointer == "" {
-            return Some(self);
-        }
-        if !pointer.starts_with('/') {
-            return None;
-        }
-        let tokens = pointer
-            .split('/')
-            .skip(1)
-            .map(|x| x.replace("~1", "/").replace("~0", "~"));
-        let mut target = self;
-
-        for token in tokens {
-            let target_opt = match *target {
-                Document::Map(ref map) => map.get(&token.into()),
-                Document::Seq(ref list) => parse_index(&token).and_then(|x| list.get(x)),
-                _ => return None,
-            };
-            if let Some(t) = target_opt {
-                target = t;
-            } else {
-                return None;
-            }
-        }
-        Some(target)
-    }
-
-    pub fn pointer_mut<'a>(&'a mut self, pointer: &str) -> Option<&'a mut Document> {
-        if pointer == "" {
-            return Some(self);
-        }
-        if !pointer.starts_with('/') {
-            return None;
-        }
-        let tokens = pointer
-            .split('/')
-            .skip(1)
-            .map(|x| x.replace("~1", "/").replace("~0", "~"));
-        let mut target = self;
-
-        for token in tokens {
-            // borrow checker gets confused about `target` being mutably borrowed too many times because of the loop
-            // this once-per-loop binding makes the scope clearer and circumvents the error
-            let target_once = target;
-            let target_opt = match *target_once {
-                Document::Map(ref mut map) => map.get_mut(&token.into()),
-                Document::Seq(ref mut list) => {
-                    parse_index(&token).and_then(move |x| list.get_mut(x))
-                }
-                _ => return None,
-            };
-            if let Some(t) = target_opt {
-                target = t;
-            } else {
-                return None;
-            }
-        }
-        Some(target)
-    }
-
     pub fn is_unit(&self) -> bool {
         match self {
             Document::Unit => true,
@@ -395,6 +341,7 @@ impl Document {
         }
     }
 
+    /// Returns true if the value is any signed integer (i8, i16, i32, i64)
     pub fn is_signed(&self) -> bool {
         match self {
             Document::I8(_) | Document::I16(_) | Document::I32(_) | Document::I64(_) => true,
@@ -402,12 +349,15 @@ impl Document {
         }
     }
 
+    /// Returns true if the value is any unsigned integer (u8, u16, u32, u64)
     pub fn is_unsigned(&self) -> bool {
         match self {
             Document::U8(_) | Document::U16(_) | Document::U32(_) | Document::U64(_) => true,
             _ => false,
         }
     }
+
+    /// Returns true if the value is any float (f32, f64)
     pub fn is_float(&self) -> bool {
         match self {
             Document::F32(_) | Document::F64(_) => true,
@@ -473,14 +423,8 @@ impl Document {
     }
 }
 
-fn parse_index(s: &str) -> Option<usize> {
-    if s.starts_with('+') || (s.starts_with('0') && s.len() != 1) {
-        return None;
-    }
-    s.parse().ok()
-}
-
 impl Eq for Document {}
+
 impl PartialOrd for Document {
     fn partial_cmp(&self, rhs: &Self) -> Option<Ordering> {
         Some(self.cmp(rhs))

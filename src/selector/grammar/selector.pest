@@ -1,0 +1,21 @@
+WHITESPACE = _{ " " }
+
+selector = _{ SOI ~ (target | pointer) ~ EOI }
+
+pointer_sep = _{ "/" }
+pointer = _{ pointer_sep ~ (ident | index)* ~ pointer* }
+
+identity = _{ "." }
+target = _{ (array | hash | identity)+ }
+hash = _{ identity ~ (ident | ( "[" ~ text ~ "]")) }
+array = _{ identity ~ "[" ~ (index) ~ "]" }
+
+text = _{ "\"" ~ chars ~ "\"" }
+chars = { char* }
+index = { ASCII_DIGIT+ }
+char = _{
+    !("\"" | "\\") ~ ANY
+    | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
+    | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
+}
+ident = { ASCII_ALPHA ~ ASCII_ALPHANUMERIC+? }

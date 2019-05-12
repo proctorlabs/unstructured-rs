@@ -2,7 +2,7 @@
 name = "unstructured"
 description = "Generic types for unstructured data"
 repository = "https://github.com/proctorlabs/unstructured-rs"
-version = "0.1.1"
+version = "0.2.0-pre"
 authors = ["Phil Proctor <philliptproctor@gmail.com>"]
 edition = "2018"
 keywords = ["unstructured", "data"]
@@ -13,12 +13,18 @@ readme = "README.md"
 [dependencies]
 serde = "1.0"
 ordered-float = "1.0"
+pest = { version = "2.1", optional = true }
+pest_derive = { version = "2.1", optional = true }
 
 [dev-dependencies]
 serde_derive = "1.0"
 serde_json = "1.0"
 serde_yaml = "0.8"
 rstest = "0.2"
+
+[features]
+default = ["selector"]
+selector = ["pest", "pest_derive"]
 
 [lib]
 name = "unstructured"
