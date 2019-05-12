@@ -11,7 +11,7 @@ fn numeric_indexing_test() {
 fn from_pointer() {
     let doc: Document =
         serde_json::from_str("{\"some\": {\"nested\": {\"value\": \"is this value\"}}}").unwrap();
-    let doc_element = doc.pointer("/some/nested/value").unwrap();
+    let doc_element = doc.select("/some/nested/value").unwrap();
     println!("{}", doc_element);
 }
 

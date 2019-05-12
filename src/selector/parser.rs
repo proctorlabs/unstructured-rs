@@ -46,7 +46,13 @@ impl Document {
             match selector.as_rule() {
                 Rule::index => result = &result[selector.as_str().parse::<usize>().unwrap()],
                 Rule::chars | Rule::ident => result = &result[selector.as_str()],
-                _ => (),
+                Rule::EOI => return Ok(result),
+                _ => {
+                    return Err(format!(
+                        "Selector {} not supported with immutable selector!",
+                        selector
+                    ))
+                }
             };
         }
         Ok(result)
@@ -59,7 +65,13 @@ impl Document {
             match selector.as_rule() {
                 Rule::index => result = &mut result[selector.as_str().parse::<usize>().unwrap()],
                 Rule::chars | Rule::ident => result = &mut result[selector.as_str()],
-                _ => (),
+                Rule::EOI => return Ok(result),
+                _ => {
+                    return Err(format!(
+                        "Selector {} not supported with immutable selector!",
+                        selector
+                    ))
+                }
             };
         }
         Ok(result)

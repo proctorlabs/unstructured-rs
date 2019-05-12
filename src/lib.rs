@@ -65,7 +65,7 @@ use unstructured::Document;
 
 let doc: Document =
     serde_json::from_str("{\"some\": {\"nested\": {\"value\": \"is this value\"}}}").unwrap();
-let doc_element = doc.pointer("/some/nested/value").unwrap(); // Returns an Option<Document>, None if not found
+let doc_element = doc.select("/some/nested/value").unwrap(); // Returns an Option<Document>, None if not found
 assert_eq!(*doc_element, "is this value".into());
 ```
 

@@ -18,4 +18,4 @@ char = _{
     | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
     | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
 }
-ident = { ASCII_ALPHA ~ ASCII_ALPHANUMERIC+? }
+ident = @{ ASCII_ALPHA ~ ASCII_ALPHANUMERIC+? }

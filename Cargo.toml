@@ -2,7 +2,7 @@
 name = "unstructured"
 description = "Generic types for unstructured data"
 repository = "https://github.com/proctorlabs/unstructured-rs"
-version = "0.2.0-pre"
+version = "0.2.0-pre1"
 authors = ["Phil Proctor <philliptproctor@gmail.com>"]
 edition = "2018"
 keywords = ["unstructured", "data"]
