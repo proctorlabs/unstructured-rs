@@ -3,10 +3,10 @@ name = "jyx"
 version = "0.1.0-beta1"
 authors = ["Phil Proctor <philliptproctor@gmail.com>"]
 edition = "2018"
-description = "Generic types for unstructured data"
+description = "Command line tool for manipulating data structures"
 repository = "https://github.com/proctorlabs/unstructured-rs"
-keywords = ["unstructured", "data"]
-categories = ["data-structures", "encoding", "parsing"]
+keywords = ["jyx", "unstructured", "data", "cli"]
+categories = ["command-line-interface", "data-structures", "parsing"]
 license = "MIT"
 readme = "README.md"
 
