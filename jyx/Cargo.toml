@@ -11,8 +11,6 @@ license = "MIT"
 readme = "README.md"
 
 [dependencies]
+structopt = "0.2"
 unstructured = "0.2.0-pre1"
-clap = "2.33"
-serde = "1.0"
-serde_json = "1.0"
-serde_yaml = "0.8"
+serde_any = "0.5"

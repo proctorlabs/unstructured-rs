@@ -1,10 +1,24 @@
-use clap::App;
+use std::path::PathBuf;
+use structopt::StructOpt;
 
-pub fn parse_args() {
-    App::new("jyx")
-        .version(crate_version!())
-        .author("Phil Proctor <philliptproctor@gmail.com>")
-        .about("jyx is a tool for manipulating and converting data structures.")
-        .bin_name("jyx")
-        .get_matches();
+#[derive(StructOpt, Debug)]
+#[structopt(name = "jyx")]
+pub struct Opt {
+    /// Input files to parse
+    #[structopt(short = "i", long = "input", help = "Input files")]
+    pub inputs: Vec<PathBuf>,
+
+    /// Input files to parse
+    #[structopt(
+        short = "o",
+        long = "output",
+        help = "Output file to write if not stdout"
+    )]
+    pub output: Option<PathBuf>,
+}
+
+impl Opt {
+    pub fn new() -> Self {
+        Opt::from_args()
+    }
 }
