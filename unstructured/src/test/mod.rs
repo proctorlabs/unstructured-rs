@@ -7,10 +7,40 @@ fn numeric_indexing_test() {
     assert_eq!(doc[100][9999], Document::Unit);
 }
 
+const MERGE1: &str = r#"{
+    "some": "val",
+    "other": 
+    {
+        "key1": "val1", 
+        "key2": "val2",
+        "array": [1, 2, 3]
+    },
+    "overwrite-me": "something"
+}"#;
+
+const MERGE2: &str = r#"{
+    "some-new": "val-appended",
+    "other":
+    {
+        "key1": "val1-appended",
+        "key3": "val3",
+        "array": [4, 5, 6]
+    },
+    "overwrite-me": 10
+}"#;
+
+#[test]
+fn merge_test() {
+    let mut doc: Document = serde_json::from_str(MERGE1).unwrap();
+    doc = doc.merge(serde_json::from_str(MERGE2).unwrap());
+    let res = serde_json::to_string_pretty(&doc).unwrap();
+    println!("{}", res);
+}
+
 #[test]
 fn from_pointer() {
     let doc: Document =
-        serde_json::from_str("{\"some\": {\"nested\": {\"value\": \"is this value\"}}}").unwrap();
+        serde_json::from_str(r#"{"some": {"nested": {"value": "is this value"}}}"#).unwrap();
     let doc_element = doc.select("/some/nested/value").unwrap();
     println!("{}", doc_element);
 }
@@ -30,7 +60,7 @@ fn map_indexing_test() {
 fn index_dynamic_mod_test() {
     let mut doc = Document::default();
     doc["test"] = Document::U64(100);
-    assert_eq!(doc["test"], Document::U64(100));
+    assert_eq!(doc["test"], 100 as u64);
     assert_eq!(doc["test-not-exist"], Document::Unit);
     assert_eq!(doc[100][9999], Document::Unit);
 }

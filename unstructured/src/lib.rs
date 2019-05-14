@@ -36,7 +36,7 @@ after it has been received.
 
 ```
 #[macro_use]
-extern crate serde_derive;
+extern crate serde;
 use unstructured::Document;
 
 #[derive(Deserialize, Serialize)]
@@ -117,10 +117,6 @@ pub enum Document {
 extern crate serde;
 
 #[cfg(test)]
-#[macro_use]
-extern crate serde_derive;
-
-#[cfg(test)]
 mod test;
 
 use ordered_float::OrderedFloat;
@@ -196,6 +192,38 @@ impl Hash for Document {
             Document::Bytes(ref v) => v.hash(hasher),
         }
     }
+}
+
+macro_rules! impl_partial_eq {
+    ($($type:ty, $vrnt:ident);*) => {
+        $(
+            impl PartialEq<$type> for Document {
+                fn eq(&self, rhs: & $type) -> bool {
+                    match self {
+                        Document::$vrnt(i) => i == rhs,
+                        _ => false,
+                    }
+                }
+            }
+        )*
+    };
+}
+
+impl_partial_eq! {
+    str, String;
+    String, String;
+    bool, Bool;
+    u8, U8;
+    u16, U16;
+    u32, U32;
+    u64, U64;
+    i8, I8;
+    i16, I16;
+    i32, I32;
+    i64, I64;
+    f32, F32;
+    f64, F64;
+    char, Char
 }
 
 impl PartialEq for Document {
@@ -414,12 +442,51 @@ impl Document {
         }
     }
 
+    /// This attempts to deserialize the document into a type that implements Deserialize
     pub fn try_into<'de, T: Deserialize<'de>>(self) -> Result<T, DeserializerError> {
         T::deserialize(self)
     }
 
+    /// This creates a new document from a type that implements Serialize
     pub fn new<T: Serialize>(value: T) -> Result<Self, SerializerError> {
         value.serialize(Serializer)
+    }
+
+    /// Merge another document into this one, consuming both documents into the result.
+    /// If this document is not a map or seq, it will be overwritten.
+    /// If this document is a seq and the other is also a seq, the other seq will be
+    /// appended to the end of this one. If the other document is not a seq, then it will
+    /// be appended to the end of the sequence in this one.
+    /// If this document is a map and the other document is also be a map, merging
+    /// maps will cause values from the other document to overwrite this one.
+    /// Otherwise, the value from the other document will overwrite this one.
+    pub fn merge(mut self, mut other: Document) -> Self {
+        match &mut self {
+            Document::Seq(s) => {
+                if let Document::Seq(ref mut o) = other {
+                    s.append(o);
+                    self
+                } else {
+                    s.push(other);
+                    self
+                }
+            }
+            Document::Map(m) => {
+                if let Document::Map(o) = other {
+                    for (key, val) in o.into_iter() {
+                        if let Some(loc) = m.remove(&key) {
+                            m.insert(key, loc.merge(val));
+                        } else {
+                            m.insert(key, val.clone());
+                        }
+                    }
+                    self
+                } else {
+                    other
+                }
+            }
+            _ => other,
+        }
     }
 }
 
