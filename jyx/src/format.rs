@@ -40,6 +40,11 @@ impl Format {
         self.formatter().serialize(value)
     }
 
+    pub fn parse_stdin(&self) -> Result<Document, String> {
+        let read = Box::new(std::io::stdin());
+        self.formatter().parse(read)
+    }
+
     pub fn parse_file(path: &PathBuf) -> Result<Document, String> {
         let mut ext = path.extension().and_then(OsStr::to_str).unwrap_or_default();
         let ext_lower = ext.to_lowercase();

@@ -209,6 +209,14 @@ macro_rules! impl_partial_eq {
     };
 }
 
+impl std::ops::Add<Document> for Document {
+    type Output = Document;
+
+    fn add(self, rhs: Document) -> Document {
+        self.merge(rhs)
+    }
+}
+
 impl_partial_eq! {
     str, String;
     String, String;
@@ -475,7 +483,7 @@ impl Document {
                 if let Document::Map(o) = other {
                     for (key, val) in o.into_iter() {
                         if let Some(loc) = m.remove(&key) {
-                            m.insert(key, loc.merge(val));
+                            m.insert(key, loc + val);
                         } else {
                             m.insert(key, val.clone());
                         }

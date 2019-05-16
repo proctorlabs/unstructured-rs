@@ -5,14 +5,23 @@ selector = _{ SOI ~ (target | pointer) ~ EOI }
 pointer_sep = _{ "/" }
 pointer = _{ pointer_sep ~ (ident | index)* ~ pointer* }
 
+target = _{ (array_index | hash | identity)+ }
 identity = _{ "." }
-target = _{ (array | hash | identity)+ }
 hash = _{ identity ~ (ident | ( "[" ~ text ~ "]")) }
-array = _{ identity ~ "[" ~ (index) ~ "]" }
+array_index = _{ identity ~ "[" ~ (index) ~ "]" }
+
+selector_filter = _{ SOI ~ doc_wildcard | (doc_index_target ~ (filter_target | pointer)? ~ pipe?)* ~ EOI }
+doc_index_target = _{ "[" ~ doc_index ~ "]" }
+doc_index = { ASCII_DIGIT+ }
+doc_wildcard = { "*" }
+filter_target = _{ (array_range | array_index | hash | identity)+ }
+array_range = _{ identity ~ "[" ~ range ~ "]" }
 
 text = _{ "\"" ~ chars ~ "\"" }
+pipe = { "<" | "|" }
 chars = { char* }
 index = { ASCII_DIGIT+ }
+range = @{ (ASCII_DIGIT+)? ~ ":" ~ (ASCII_DIGIT+)? }
 char = _{
     !("\"" | "\\") ~ ANY
     | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")

@@ -11,15 +11,22 @@ use unstructured::Document;
 
 fn main() -> Result<(), String> {
     let opt = Opt::new();
-    let mut result: Document = Document::default();
+    let mut docs: Vec<Document> = vec![];
 
-    for (i, path) in opt.inputs.iter().enumerate() {
-        let mut doc: Document = format::Format::parse_file(path)?;
-        if i < opt.filters.len() {
-            doc = doc.select(&opt.filters[i])?.clone();
-        }
-        result = result.merge(doc);
+    if let Some(in_format) = opt.stdin_format {
+        docs.push(in_format.parse_stdin()?);
     }
+
+    for path in opt.inputs.iter() {
+        docs.push(format::Format::parse_file(path)?);
+    }
+
+    let filter = match opt.filter {
+        Some(s) => s,
+        None => "*".to_string(),
+    };
+
+    let result = Document::filter(&docs, &filter)?;
 
     let output = opt.output_format.serialize(&result)?;
 

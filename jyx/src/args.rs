@@ -9,11 +9,19 @@ pub struct Opt {
     #[structopt(short = "i", long = "input", help = "Input files")]
     pub inputs: Vec<PathBuf>,
 
-    /// Filters to apply to input files, applies in same order as input files
-    #[structopt(short = "f", long = "filter", help = "Input filters")]
-    pub filters: Vec<String>,
+    /// Filter to apply to input files
+    #[structopt(short = "f", long = "filter", help = "Input filter")]
+    pub filter: Option<String>,
 
-    /// Important argument.
+    /// The format of stdin input.
+    #[structopt(
+        raw(possible_values = "&Format::variants()", case_insensitive = "true"),
+        short = "s",
+        long = "stdin-format"
+    )]
+    pub stdin_format: Option<Format>,
+
+    /// The format of the generated output.
     #[structopt(
         raw(possible_values = "&Format::variants()", case_insensitive = "true"),
         long = "format",
@@ -21,7 +29,7 @@ pub struct Opt {
     )]
     pub output_format: Format,
 
-    /// Input files to parse
+    /// Output file, uses STDOUT if not specified
     #[structopt(
         short = "o",
         long = "output",
