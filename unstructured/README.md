@@ -26,6 +26,15 @@ So why not use one of the above libraries?
 - **serde_value::Value** provides an intermediate format for serialization and deserialization like Document, however it does
   not provide as many options for manipulating the data such as indexing and easy type conversion.
 
+In addition to many of the futures provided by the above libraries, unstructured also provides:
+
+- Easy usage of comparisons with primitive types, e.g. ```Document::U64(100) == 100 as u64```
+- Easy merging of multiple documents: ```doc1.merge(doc2)``` or ```doc = doc1 + doc2```
+- Selectors for retrieving nested values within a document without cloning: ```doc.select(".path.to.key")```
+- Filters to create new documents from an array of input documents: ```docs.filter("[0].path.to.key | [1].path.to.array[0:5]")```
+- Convenience methods for is_type(), as_type(), take_type()
+- Most of the From implementation for easy document creation
+
 ## Example Usage
 
 The primary struct used in this repo is ```Document```. Document provides methods for easy type conversion and manipulation.
@@ -56,18 +65,21 @@ struct SomeStruct {
 fn main() {
     let from_service = "{\"key\": \"value\"}";
     let doc: Document = serde_json::from_str(from_service).unwrap();
-    assert_eq!(doc["key"], "value".into());
+    let expected: Document = "value".into();
+    assert_eq!(doc["key"], expected);
 
     let some_struct: SomeStruct = doc.try_into().unwrap();
     assert_eq!(some_struct.key, "value");
 
     let another_doc = Document::new(some_struct).unwrap();
-    assert_eq!(another_doc["key"], "value".into());
+    assert_eq!(another_doc["key"], expected);
 }
 ```
 
-[JSON Pointer syntax](https://tools.ietf.org/html/rfc6901) can be used as well to quickly get a nested value. This will work
-regardless of the format that you deserialized from, so this syntax can be used to easily retrieve, for example, nested YAML values.
+Selectors can be used to retrieve a reference to nested values, regardless of the incoming format.
+
+- [JSON Pointer syntax](https://tools.ietf.org/html/rfc6901): ```doc.select("/path/to/key")```
+- A JQ inspired syntax: ```doc.select(".path.to.[\"key\"")```
 
 ```rust
 use unstructured::Document;
@@ -75,48 +87,19 @@ use unstructured::Document;
 let doc: Document =
     serde_json::from_str("{\"some\": {\"nested\": {\"value\": \"is this value\"}}}").unwrap();
 let doc_element = doc.select("/some/nested/value").unwrap(); // Returns an Option<Document>, None if not found
-assert_eq!(*doc_element, "is this value".into());
+let expected: Document = "is this value".into();
+assert_eq!(*doc_element, expected);
 ```
 
-Below are the Document enum types available:
+In addition to selectors, filters can be used to create new documents from an array of input documents.
 
 ```rust
-use std::collections::BTreeMap;
-pub enum Document {
-    // Boolean
-    Bool(bool),
+use unstructured::Document;
 
-    // Unsigned
-    U8(u8),
-    U16(u16),
-    U32(u32),
-    U64(u64),
-
-    // Signed
-    I8(i8),
-    I16(i16),
-    I32(i32),
-    I64(i64),
-
-    // Floats
-    F32(f32),
-    F64(f64),
-
-    // Char/String
-    Char(char),
-    String(String),
-    // Effectively 'Null'
-    Unit,
-    // Options
-    Option(Option<Box<Document>>),
-    // Newtypes
-    Newtype(Box<Document>),
-    // Arrays
-    Seq(Vec<Document>),
-    // Maps
-    Map(BTreeMap<Document, Document>),
-    // Raw data
-    Bytes(Vec<u8>),
-}
+let docs: Vec<Document> = vec![
+    serde_json::from_str(r#"{"some": {"nested": {"vals": [1,2,3]}}}"#).unwrap(),
+    serde_json::from_str(r#"{"some": {"nested": {"vals": [4,5,6]}}}"#).unwrap(),
+];
+let result = Document::filter(&docs, "[0].some.nested.vals | [1].some.nested.vals").unwrap();
+assert_eq!(result["some"]["nested"]["vals"][4], Document::U64(5));
 ```
-
