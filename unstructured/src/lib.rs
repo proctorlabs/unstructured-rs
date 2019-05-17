@@ -84,6 +84,13 @@ assert_eq!(*doc_element, expected);
 
 In addition to selectors, filters can be used to create new documents from an array of input documents.
 
+- Document selection: "[0]", "[1]", "*"
+- Path navigation: "[0].path.to.key" "[0] /path/to/key" r#" [0] .["path"].["to"].["key"] "#
+- Index selection: "[0] .array.[0]"
+- Sequence selection: "[0] .array.[0:0]" "[0] .array.[:]" "[0] .array.[:5]"
+- Filtering multiple docs: "[0].key | [1].key"
+- Merging docs: "*" "[0].key.to.merge | [1].add.this.key.too | [2].key.to.merge"
+
 ```
 use unstructured::Document;
 
