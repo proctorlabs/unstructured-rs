@@ -137,11 +137,7 @@ fn deserialize_into_enum() {
     let document = Document::String("Bar".into());
     assert_eq!(Foo::deserialize(document).unwrap(), Foo::Bar);
 
-    let document = Document::Map(
-        vec![(Document::String("Baz".into()), Document::U8(1))]
-            .into_iter()
-            .collect(),
-    );
+    let document = Document::Map(vec![("Baz".into(), Document::U8(1))].into_iter().collect());
     assert_eq!(Foo::deserialize(document).unwrap(), Foo::Baz(1));
 }
 
