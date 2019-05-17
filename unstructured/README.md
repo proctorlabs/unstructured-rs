@@ -6,7 +6,7 @@
 
 </p>
 
-# Unstructured Data in Rust
+# Unstructured Documents
 
 This library provides types for usage with unstructured data. This is based on functionality from both
 [serde_json](https://github.com/serde-rs/json) and [serde_value](https://github.com/arcnmx/serde-value). Depending
@@ -45,7 +45,7 @@ after it has been received.
 
 ```rust
 #[macro_use]
-extern crate serde_derive;
+extern crate serde;
 use unstructured::Document;
 
 #[derive(Deserialize, Serialize)]
@@ -74,7 +74,7 @@ use unstructured::Document;
 
 let doc: Document =
     serde_json::from_str("{\"some\": {\"nested\": {\"value\": \"is this value\"}}}").unwrap();
-let doc_element = doc.pointer("/some/nested/value").unwrap(); // Returns an Option<Document>, None if not found
+let doc_element = doc.select("/some/nested/value").unwrap(); // Returns an Option<Document>, None if not found
 assert_eq!(*doc_element, "is this value".into());
 ```
 

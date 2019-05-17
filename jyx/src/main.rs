@@ -1,3 +1,7 @@
+/*!
+jyx is a CLI tool for manipulating data of various formats.
+*/
+
 mod args;
 mod format;
 

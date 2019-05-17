@@ -6,6 +6,6 @@
 
 </p>
 
-# Unstructured Documents
+# jyx CLI
 
 {{readme}}
