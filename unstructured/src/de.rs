@@ -96,15 +96,15 @@ impl de::Error for DeserializerError {
         DeserializerError::Custom(msg.to_string())
     }
 
-    fn invalid_type(unexp: de::Unexpected, exp: &de::Expected) -> Self {
+    fn invalid_type(unexp: de::Unexpected, exp: &dyn de::Expected) -> Self {
         DeserializerError::InvalidType(unexp.into(), exp.to_string())
     }
 
-    fn invalid_value(unexp: de::Unexpected, exp: &de::Expected) -> Self {
+    fn invalid_value(unexp: de::Unexpected, exp: &dyn de::Expected) -> Self {
         DeserializerError::InvalidValue(unexp.into(), exp.to_string())
     }
 
-    fn invalid_length(len: usize, exp: &de::Expected) -> Self {
+    fn invalid_length(len: usize, exp: &dyn de::Expected) -> Self {
         DeserializerError::InvalidLength(len, exp.to_string())
     }
 

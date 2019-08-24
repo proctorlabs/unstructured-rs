@@ -44,6 +44,31 @@ impl Index for usize {
     }
 }
 
+impl Index for Document {
+    fn index_into<'v>(&self, v: &'v Document) -> Option<&'v Document> {
+        match *v {
+            Document::Map(ref map) => map.get(self),
+            _ => None,
+        }
+    }
+    fn index_into_mut<'v>(&self, v: &'v mut Document) -> Option<&'v mut Document> {
+        match *v {
+            Document::Map(ref mut map) => map.get_mut(self),
+            _ => None,
+        }
+    }
+
+    fn index_or_insert<'v>(&self, v: &'v mut Document) -> &'v mut Document {
+        if let Document::Unit = *v {
+            *v = Document::Map(BTreeMap::default());
+        }
+        match *v {
+            Document::Map(ref mut map) => map.entry(self.clone()).or_insert(Document::Unit),
+            _ => panic!("cannot access key {:?} in Document {}", self, Type(v)),
+        }
+    }
+}
+
 impl Index for str {
     fn index_into<'v>(&self, v: &'v Document) -> Option<&'v Document> {
         match *v {
@@ -98,10 +123,12 @@ where
 }
 
 mod private {
+    use super::Document;
     pub trait Sealed {}
     impl Sealed for usize {}
     impl Sealed for str {}
     impl Sealed for String {}
+    impl Sealed for Document {}
     impl<'a, T: ?Sized> Sealed for &'a T where T: Sealed {}
 }
 

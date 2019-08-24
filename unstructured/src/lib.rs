@@ -184,6 +184,14 @@ impl Hash for Document {
     }
 }
 
+impl std::ops::Add<Document> for Document {
+    type Output = Document;
+
+    fn add(self, rhs: Document) -> Document {
+        self.merge(rhs)
+    }
+}
+
 macro_rules! impl_partial_eq {
     ($($type:ty, $vrnt:ident);*) => {
         $(
@@ -197,14 +205,6 @@ macro_rules! impl_partial_eq {
             }
         )*
     };
-}
-
-impl std::ops::Add<Document> for Document {
-    type Output = Document;
-
-    fn add(self, rhs: Document) -> Document {
-        self.merge(rhs)
-    }
 }
 
 impl_partial_eq! {
@@ -320,28 +320,52 @@ macro_rules! impl_is_as {
 
 impl Document {
     impl_is_as! {
-        is_i8,      as_i8,      take_i8,        I8,         i8;
-        is_i16,     as_i16,     take_i16,       I16,        i16;
-        is_i32,     as_i32,     take_i32,       I32,        i32;
-        is_i64,     as_i64,     take_i64,       I64,        i64;
-        is_u8,      as_u8,      take_u8,        U8,         u8;
-        is_u16,     as_u16,     take_u16,       U16,        u16;
-        is_u32,     as_u32,     take_u32,       U32,        u32;
-        is_u64,     as_u64,     take_u64,       U64,        u64;
-        is_f32,     as_f32,     take_f32,       F32,        f32;
-        is_f64,     as_f64,     take_f64,       F64,        f64;
-        is_bool,    as_bool,    take_bool,      Bool,       bool;
-        is_char,    as_char,    take_char,      Char,       char;
-        is_string,  as_string,  take_string,    String,     String;
-        is_map,     as_map,     take_map,       Map,        BTreeMap<Document, Document>;
-        is_option,  as_option,  take_option,    Option,     Option<Box<Document>>;
-        is_bytes,   as_bytes,   take_bytes,     Bytes,      Vec<u8>;
-        is_seq,     as_seq,     take_seq,       Seq,        Vec<Document>;
-        is_newtype, as_newtype, take_newtype,   Newtype,    Box<Document>
+        is_i8,      as_i8,      take_i8,      I8,         i8;
+        is_i16,     as_i16,     take_i16,     I16,        i16;
+        is_i32,     as_i32,     take_i32,     I32,        i32;
+        is_i64,     as_i64,     take_i64,     I64,        i64;
+        is_u8,      as_u8,      take_u8,      U8,         u8;
+        is_u16,     as_u16,     take_u16,     U16,        u16;
+        is_u32,     as_u32,     take_u32,     U32,        u32;
+        is_u64,     as_u64,     take_u64,     U64,        u64;
+        is_f32,     as_f32,     take_f32,     F32,        f32;
+        is_f64,     as_f64,     take_f64,     F64,        f64;
+        is_bool,    as_bool,    take_bool,    Bool,       bool;
+        is_char,    as_char,    take_char,    Char,       char;
+        is_string,  as_string,  take_string,  String,     String;
+        is_map,     as_map,     take_map,     Map,        BTreeMap<Document, Document>;
+        is_option,  as_option,  take_option,  Option,     Option<Box<Document>>;
+        is_bytes,   as_bytes,   take_bytes,   Bytes,      Vec<u8>;
+        is_seq,     as_seq,     take_seq,     Seq,        Vec<Document>;
+        is_newtype, as_newtype, take_newtype, Newtype,    Box<Document>
+    }
+
+    pub fn get_path<T: index::Index>(&self, path: &[&T]) -> &Document {
+        let mut temp = self;
+        for p in path.iter() {
+            temp = &temp[p];
+        }
+        temp
+    }
+
+    pub fn set_path<T: index::Index, U: Into<Document>>(&mut self, val: U, path: &[&T]) {
+        let mut temp = self;
+        for p in path.iter() {
+            temp = &mut temp[p];
+        }
+        *temp = val.into();
+    }
+
+    pub fn set<U: Into<Document>>(&mut self, val: U) {
+        *self = val.into();
     }
 
     pub fn replace(&mut self, new_val: Document) -> Self {
         mem::replace(self, new_val)
+    }
+
+    pub fn take(&mut self) -> Self {
+        mem::replace(self, Document::Unit)
     }
 
     pub fn is_unit(&self) -> bool {
@@ -524,24 +548,26 @@ impl fmt::Display for Document {
                 .map(|v| v.fmt(fmt))
                 .unwrap_or_else(|| fmt.write_str("None")),
             Document::Newtype(t) => t.fmt(fmt),
-            Document::Seq(s) => fmt
-                .write_str("[")
-                .and_then(|_| {
-                    s.iter()
-                        .fold(Ok(()), |_, e| e.fmt(fmt).and_then(|_| fmt.write_str(",")))
-                })
-                .and_then(|_| fmt.write_str("]")),
-            Document::Map(m) => fmt.write_str("{").and_then(|_| {
-                m.iter()
-                    .fold(Ok(()), |_, (k, v)| {
-                        k.fmt(fmt).and_then(|_| {
-                            fmt.write_str(": ")
-                                .and_then(|_| v.fmt(fmt))
-                                .and_then(|_| fmt.write_str(","))
-                        })
-                    })
-                    .and_then(|_| fmt.write_str("}"))
-            }),
+            Document::Seq(s) => {
+                fmt.write_str("[")?;
+                fmt.write_str(
+                    &s.iter()
+                        .map(|doc| doc.to_string())
+                        .collect::<Vec<String>>()
+                        .join(","),
+                )?;
+                fmt.write_str("]")
+            }
+            Document::Map(m) => {
+                fmt.write_str("{")?;
+                fmt.write_str(
+                    &m.iter()
+                        .map(|(k, v)| format!("{} => {}", k, v))
+                        .collect::<Vec<String>>()
+                        .join(","),
+                )?;
+                fmt.write_str("}")
+            }
             Document::Bytes(_) => fmt.write_str("b[...]"),
         }
     }

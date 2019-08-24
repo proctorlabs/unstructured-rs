@@ -107,7 +107,7 @@ macro_rules! parse_range {
                     Document::Seq(res)
                 }
             }
-            _ => Err(format!("Cannot take range on non-sequence value!"))?,
+            _ => return Err(format!("Cannot take range on non-sequence value!")),
         }
     };
 }
@@ -169,7 +169,7 @@ impl Document {
                     Rule::doc_index => {
                         let index = parse_doc_index!(selector);
                         if index >= docs.len() {
-                            Err(format!("Document index of {} is out of bounds", index))?;
+                            return Err(format!("Document index of {} is out of bounds", index));
                         } else {
                             current = &docs[index];
                         }

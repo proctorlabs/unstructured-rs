@@ -16,7 +16,7 @@ arg_enum! {
 }
 
 impl Format {
-    fn formatter(&self) -> Box<Formatting> {
+    fn formatter(&self) -> Box<dyn Formatting> {
         match self {
             Format::Json => Box::new(Json),
             Format::PrettyJson => Box::new(PrettyJson),
@@ -63,7 +63,7 @@ impl Format {
 trait Formatting {
     fn get_extensions(&self) -> Vec<&'static str>;
     fn serialize(&self, value: &unstructured::Document) -> Result<String, String>;
-    fn parse(&self, rdr: Box<Read>) -> Result<Document, String>;
+    fn parse(&self, rdr: Box<dyn Read>) -> Result<Document, String>;
 }
 
 pub struct PrettyJson;
@@ -77,7 +77,7 @@ impl Formatting for PrettyJson {
         serde_json::to_string_pretty(value).map_err(|e| format!("{}", e))
     }
 
-    fn parse(&self, rdr: Box<Read>) -> Result<Document, String> {
+    fn parse(&self, rdr: Box<dyn Read>) -> Result<Document, String> {
         serde_json::from_reader(rdr).map_err(|e| format!("{}", e))
     }
 }
@@ -93,7 +93,7 @@ impl Formatting for Json {
         serde_json::to_string(value).map_err(|e| format!("{}", e))
     }
 
-    fn parse(&self, rdr: Box<Read>) -> Result<Document, String> {
+    fn parse(&self, rdr: Box<dyn Read>) -> Result<Document, String> {
         serde_json::from_reader(rdr).map_err(|e| format!("{}", e))
     }
 }
@@ -109,7 +109,7 @@ impl Formatting for Yaml {
         serde_yaml::to_string(value).map_err(|e| format!("{}", e))
     }
 
-    fn parse(&self, rdr: Box<Read>) -> Result<Document, String> {
+    fn parse(&self, rdr: Box<dyn Read>) -> Result<Document, String> {
         serde_yaml::from_reader(rdr).map_err(|e| format!("{}", e))
     }
 }
@@ -125,7 +125,7 @@ impl Formatting for Toml {
         toml::to_string(value).map_err(|e| format!("{}", e))
     }
 
-    fn parse(&self, mut rdr: Box<Read>) -> Result<Document, String> {
+    fn parse(&self, mut rdr: Box<dyn Read>) -> Result<Document, String> {
         let mut s = Vec::new();
         rdr.read_to_end(&mut s).map_err(|e| format!("{}", e))?;
         Ok(toml::from_slice(&s).map_err(|e| format!("{}", e))?)
@@ -143,7 +143,7 @@ impl Formatting for Xml {
         serde_xml_rs::to_string(value).map_err(|e| format!("{}", e))
     }
 
-    fn parse(&self, rdr: Box<Read>) -> Result<Document, String> {
+    fn parse(&self, rdr: Box<dyn Read>) -> Result<Document, String> {
         serde_xml_rs::from_reader(rdr).map_err(|e| format!("{}", e))
     }
 }
