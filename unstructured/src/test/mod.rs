@@ -45,6 +45,13 @@ fn path_test() {
 }
 
 #[test]
+fn dynamic_indexing_test() {
+    let mut doc = Document::Unit;
+    doc["test"][5]["someval"] = true.into();
+    println!("{}", doc);
+}
+
+#[test]
 fn merge_test() {
     let mut doc: Document = serde_json::from_str(MERGE1).unwrap();
     doc = doc.merge(serde_json::from_str(MERGE2).unwrap());

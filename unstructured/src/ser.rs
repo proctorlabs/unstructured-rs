@@ -38,10 +38,12 @@ impl ser::Serialize for Document {
             Document::U16(v) => s.serialize_u16(v),
             Document::U32(v) => s.serialize_u32(v),
             Document::U64(v) => s.serialize_u64(v),
+            Document::U128(v) => s.serialize_u128(v),
             Document::I8(v) => s.serialize_i8(v),
             Document::I16(v) => s.serialize_i16(v),
             Document::I32(v) => s.serialize_i32(v),
             Document::I64(v) => s.serialize_i64(v),
+            Document::I128(v) => s.serialize_i128(v),
             Document::F32(v) => s.serialize_f32(v),
             Document::F64(v) => s.serialize_f64(v),
             Document::Char(v) => s.serialize_char(v),
@@ -90,6 +92,10 @@ impl ser::Serializer for Serializer {
         Ok(Document::I64(v))
     }
 
+    fn serialize_i128(self, v: i128) -> Result<Self::Ok, Self::Error> {
+        Ok(Document::I128(v))
+    }
+
     fn serialize_u8(self, v: u8) -> Result<Self::Ok, Self::Error> {
         Ok(Document::U8(v))
     }
@@ -104,6 +110,10 @@ impl ser::Serializer for Serializer {
 
     fn serialize_u64(self, v: u64) -> Result<Self::Ok, Self::Error> {
         Ok(Document::U64(v))
+    }
+
+    fn serialize_u128(self, v: u128) -> Result<Self::Ok, Self::Error> {
+        Ok(Document::U128(v))
     }
 
     fn serialize_f32(self, v: f32) -> Result<Self::Ok, Self::Error> {

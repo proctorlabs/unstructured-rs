@@ -21,6 +21,7 @@ mod test {
         })
         .unwrap();
 
+        assert_eq!(&mut doc["vals"][1], &mut Document::U64(2));
         assert_eq!(doc.select("/vals/1").unwrap().clone(), Document::U64(2));
 
         assert_eq!(

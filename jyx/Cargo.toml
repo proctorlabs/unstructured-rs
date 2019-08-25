@@ -1,6 +1,6 @@
 [package]
 name = "jyx"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Phil Proctor <philliptproctor@gmail.com>"]
 edition = "2018"
 description = "Command line tool for manipulating data structures"

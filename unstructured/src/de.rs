@@ -226,6 +226,10 @@ impl<'de> de::Visitor<'de> for DocumentVisitor {
         Ok(Document::I64(value))
     }
 
+    fn visit_i128<E>(self, value: i128) -> Result<Document, E> {
+        Ok(Document::I128(value))
+    }
+
     fn visit_u8<E>(self, value: u8) -> Result<Document, E> {
         Ok(Document::U8(value))
     }
@@ -240,6 +244,10 @@ impl<'de> de::Visitor<'de> for DocumentVisitor {
 
     fn visit_u64<E>(self, value: u64) -> Result<Document, E> {
         Ok(Document::U64(value))
+    }
+
+    fn visit_u128<E>(self, value: u128) -> Result<Document, E> {
+        Ok(Document::U128(value))
     }
 
     fn visit_f32<E>(self, value: f32) -> Result<Document, E> {
@@ -346,10 +354,12 @@ where
             Document::U16(v) => visitor.visit_u16(v),
             Document::U32(v) => visitor.visit_u32(v),
             Document::U64(v) => visitor.visit_u64(v),
+            Document::U128(v) => visitor.visit_u128(v),
             Document::I8(v) => visitor.visit_i8(v),
             Document::I16(v) => visitor.visit_i16(v),
             Document::I32(v) => visitor.visit_i32(v),
             Document::I64(v) => visitor.visit_i64(v),
+            Document::I128(v) => visitor.visit_i128(v),
             Document::F32(v) => visitor.visit_f32(v),
             Document::F64(v) => visitor.visit_f64(v),
             Document::Char(v) => visitor.visit_char(v),
@@ -433,7 +443,7 @@ where
     }
 
     forward_to_deserialize_any! {
-        bool u8 u16 u32 u64 i8 i16 i32 i64 f32 f64 char str string unit
+        bool u8 u16 u32 u64 u128 i8 i16 i32 i64 i128 f32 f64 char str string unit
         seq bytes byte_buf map unit_struct
         tuple_struct struct tuple ignored_any identifier
     }
@@ -479,7 +489,7 @@ impl<'de> de::Deserializer<'de> for Document {
     }
 
     forward_to_deserialize_any! {
-        bool u8 u16 u32 u64 i8 i16 i32 i64 f32 f64 char str string unit
+        bool u8 u16 u32 u64 u128 i8 i16 i32 i64 i128 f32 f64 char str string unit
         seq bytes byte_buf map unit_struct
         tuple_struct struct tuple ignored_any identifier
     }

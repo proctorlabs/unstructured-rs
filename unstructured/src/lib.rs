@@ -134,11 +134,13 @@ pub enum Document {
     U16(u16),
     U32(u32),
     U64(u64),
+    U128(u128),
 
     I8(i8),
     I16(i16),
     I32(i32),
     I64(i64),
+    I128(i128),
 
     F32(f32),
     F64(f64),
@@ -166,10 +168,12 @@ impl Hash for Document {
             Document::U16(v) => v.hash(hasher),
             Document::U32(v) => v.hash(hasher),
             Document::U64(v) => v.hash(hasher),
+            Document::U128(v) => v.hash(hasher),
             Document::I8(v) => v.hash(hasher),
             Document::I16(v) => v.hash(hasher),
             Document::I32(v) => v.hash(hasher),
             Document::I64(v) => v.hash(hasher),
+            Document::I128(v) => v.hash(hasher),
             Document::F32(v) => OrderedFloat(v).hash(hasher),
             Document::F64(v) => OrderedFloat(v).hash(hasher),
             Document::Char(v) => v.hash(hasher),
@@ -232,10 +236,12 @@ impl PartialEq for Document {
             (&Document::U16(v0), &Document::U16(v1)) if v0 == v1 => true,
             (&Document::U32(v0), &Document::U32(v1)) if v0 == v1 => true,
             (&Document::U64(v0), &Document::U64(v1)) if v0 == v1 => true,
+            (&Document::U128(v0), &Document::U128(v1)) if v0 == v1 => true,
             (&Document::I8(v0), &Document::I8(v1)) if v0 == v1 => true,
             (&Document::I16(v0), &Document::I16(v1)) if v0 == v1 => true,
             (&Document::I32(v0), &Document::I32(v1)) if v0 == v1 => true,
             (&Document::I64(v0), &Document::I64(v1)) if v0 == v1 => true,
+            (&Document::I128(v0), &Document::I128(v1)) if v0 == v1 => true,
             (&Document::F32(v0), &Document::F32(v1)) if OrderedFloat(v0) == OrderedFloat(v1) => {
                 true
             }
@@ -324,10 +330,12 @@ impl Document {
         is_i16,     as_i16,     take_i16,     I16,        i16;
         is_i32,     as_i32,     take_i32,     I32,        i32;
         is_i64,     as_i64,     take_i64,     I64,        i64;
+        is_i128,    as_i128,    take_i128,    I128,       i128;
         is_u8,      as_u8,      take_u8,      U8,         u8;
         is_u16,     as_u16,     take_u16,     U16,        u16;
         is_u32,     as_u32,     take_u32,     U32,        u32;
         is_u64,     as_u64,     take_u64,     U64,        u64;
+        is_u128,    as_u128,    take_u128,    U128,       u128;
         is_f32,     as_f32,     take_f32,     F32,        f32;
         is_f64,     as_f64,     take_f64,     F64,        f64;
         is_bool,    as_bool,    take_bool,    Bool,       bool;
@@ -381,9 +389,11 @@ impl Document {
             | Document::U16(_)
             | Document::U32(_)
             | Document::U64(_)
+            | Document::U128(_)
             | Document::I8(_)
             | Document::I16(_)
             | Document::I32(_)
+            | Document::I128(_)
             | Document::I64(_)
             | Document::F32(_)
             | Document::F64(_) => true,
@@ -394,7 +404,11 @@ impl Document {
     /// Returns true if the value is any signed integer (i8, i16, i32, i64)
     pub fn is_signed(&self) -> bool {
         match self {
-            Document::I8(_) | Document::I16(_) | Document::I32(_) | Document::I64(_) => true,
+            Document::I8(_)
+            | Document::I16(_)
+            | Document::I32(_)
+            | Document::I64(_)
+            | Document::I128(_) => true,
             _ => false,
         }
     }
@@ -402,7 +416,11 @@ impl Document {
     /// Returns true if the value is any unsigned integer (u8, u16, u32, u64)
     pub fn is_unsigned(&self) -> bool {
         match self {
-            Document::U8(_) | Document::U16(_) | Document::U32(_) | Document::U64(_) => true,
+            Document::U8(_)
+            | Document::U16(_)
+            | Document::U32(_)
+            | Document::U64(_)
+            | Document::U128(_) => true,
             _ => false,
         }
     }
@@ -415,6 +433,25 @@ impl Document {
         }
     }
 
+    pub fn as_usize(&self) -> Option<usize> {
+        match self {
+            Document::U8(i) => Some(*i as usize),
+            Document::U16(i) => Some(*i as usize),
+            Document::U32(i) => Some(*i as usize),
+            Document::U64(i) => Some(*i as usize),
+            Document::U128(i) => Some(*i as usize),
+            Document::I8(i) => Some(*i as usize),
+            Document::I16(i) => Some(*i as usize),
+            Document::I32(i) => Some(*i as usize),
+            Document::I64(i) => Some(*i as usize),
+            Document::I128(i) => Some(*i as usize),
+            Document::F32(i) => Some(*i as usize),
+            Document::F64(i) => Some(*i as usize),
+            Document::Char(i) => Some(*i as usize),
+            _ => None,
+        }
+    }
+
     fn discriminant(&self) -> usize {
         match *self {
             Document::Bool(..) => 0,
@@ -422,20 +459,22 @@ impl Document {
             Document::U16(..) => 2,
             Document::U32(..) => 3,
             Document::U64(..) => 4,
-            Document::I8(..) => 5,
-            Document::I16(..) => 6,
-            Document::I32(..) => 7,
-            Document::I64(..) => 8,
-            Document::F32(..) => 9,
-            Document::F64(..) => 10,
-            Document::Char(..) => 11,
-            Document::String(..) => 12,
-            Document::Unit => 13,
-            Document::Option(..) => 14,
-            Document::Newtype(..) => 15,
-            Document::Seq(..) => 16,
-            Document::Map(..) => 17,
-            Document::Bytes(..) => 18,
+            Document::U128(..) => 5,
+            Document::I8(..) => 6,
+            Document::I16(..) => 7,
+            Document::I32(..) => 8,
+            Document::I64(..) => 9,
+            Document::I128(..) => 10,
+            Document::F32(..) => 11,
+            Document::F64(..) => 12,
+            Document::Char(..) => 13,
+            Document::String(..) => 14,
+            Document::Unit => 15,
+            Document::Option(..) => 16,
+            Document::Newtype(..) => 17,
+            Document::Seq(..) => 18,
+            Document::Map(..) => 19,
+            Document::Bytes(..) => 20,
         }
     }
 
@@ -447,10 +486,12 @@ impl Document {
             Document::U16(n) => serde::de::Unexpected::Unsigned(n as u64),
             Document::U32(n) => serde::de::Unexpected::Unsigned(n as u64),
             Document::U64(n) => serde::de::Unexpected::Unsigned(n),
+            Document::U128(n) => serde::de::Unexpected::Unsigned(n as u64),
             Document::I8(n) => serde::de::Unexpected::Signed(n as i64),
             Document::I16(n) => serde::de::Unexpected::Signed(n as i64),
             Document::I32(n) => serde::de::Unexpected::Signed(n as i64),
             Document::I64(n) => serde::de::Unexpected::Signed(n),
+            Document::I128(n) => serde::de::Unexpected::Signed(n as i64),
             Document::F32(n) => serde::de::Unexpected::Float(n as f64),
             Document::F64(n) => serde::de::Unexpected::Float(n),
             Document::Char(c) => serde::de::Unexpected::Char(c),
@@ -534,10 +575,12 @@ impl fmt::Display for Document {
             Document::U16(n) => n.fmt(fmt),
             Document::U32(n) => n.fmt(fmt),
             Document::U64(n) => n.fmt(fmt),
+            Document::U128(n) => n.fmt(fmt),
             Document::I8(n) => n.fmt(fmt),
             Document::I16(n) => n.fmt(fmt),
             Document::I32(n) => n.fmt(fmt),
             Document::I64(n) => n.fmt(fmt),
+            Document::I128(n) => n.fmt(fmt),
             Document::F32(n) => n.fmt(fmt),
             Document::F64(n) => n.fmt(fmt),
             Document::Char(c) => c.fmt(fmt),
