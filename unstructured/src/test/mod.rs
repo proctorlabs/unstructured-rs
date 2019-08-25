@@ -54,7 +54,7 @@ fn dynamic_indexing_test() {
 #[test]
 fn merge_test() {
     let mut doc: Document = serde_json::from_str(MERGE1).unwrap();
-    doc = doc.merge(serde_json::from_str(MERGE2).unwrap());
+    doc.merge(serde_json::from_str(MERGE2).unwrap());
     let res = serde_json::to_string_pretty(&doc).unwrap();
     println!("{}", res);
 }

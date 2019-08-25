@@ -191,8 +191,9 @@ impl Hash for Document {
 impl std::ops::Add<Document> for Document {
     type Output = Document;
 
-    fn add(self, rhs: Document) -> Document {
-        self.merge(rhs)
+    fn add(mut self, rhs: Document) -> Document {
+        self.merge(rhs);
+        self
     }
 }
 
@@ -523,32 +524,29 @@ impl Document {
     /// If this document is a map and the other document is also be a map, merging
     /// maps will cause values from the other document to overwrite this one.
     /// Otherwise, the value from the other document will overwrite this one.
-    pub fn merge(mut self, mut other: Document) -> Self {
-        match &mut self {
+    pub fn merge(&mut self, mut other: Document) {
+        match self {
             Document::Seq(s) => {
                 if let Document::Seq(ref mut o) = other {
                     s.append(o);
-                    self
                 } else {
                     s.push(other);
-                    self
                 }
             }
-            Document::Map(m) => {
+            Document::Map(ref mut m) => {
                 if let Document::Map(o) = other {
                     for (key, val) in o.into_iter() {
-                        if let Some(loc) = m.remove(&key) {
-                            m.insert(key, loc + val);
+                        if let Some(loc) = m.get_mut(&key) {
+                            loc.merge(val);
                         } else {
                             m.insert(key, val.clone());
                         }
                     }
-                    self
                 } else {
-                    other
+                    *self = other
                 }
             }
-            _ => other,
+            _ => *self = other,
         }
     }
 }
