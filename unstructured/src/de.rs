@@ -376,6 +376,8 @@ where
                     |(k, v)| (DocumentDeserializer::new(k), DocumentDeserializer::new(v)),
                 ))),
             Document::Bytes(v) => visitor.visit_byte_buf(v),
+            Document::Unassigned => visitor.visit_unit(),
+            Document::Err(e) => Err(DeserializerError::Custom(format!("{}", e)).to_error()),
         }
     }
 

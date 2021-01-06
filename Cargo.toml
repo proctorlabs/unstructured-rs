@@ -1,5 +1,4 @@
 [workspace]
 members = [
-    "unstructured",
-    "jyx"
+    "unstructured"
 ]

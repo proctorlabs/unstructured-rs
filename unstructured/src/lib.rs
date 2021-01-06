@@ -116,6 +116,7 @@ use std::collections::BTreeMap;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::mem;
+use std::sync::Arc;
 
 use de::*;
 use ser::*;
@@ -154,6 +155,9 @@ pub enum Document {
     Seq(Vec<Document>),
     Map(BTreeMap<Document, Document>),
     Bytes(Vec<u8>),
+
+    Unassigned,
+    Err(Arc<dyn std::error::Error + Send + Sync>),
 }
 
 impl Hash for Document {
@@ -184,6 +188,8 @@ impl Hash for Document {
             Document::Seq(ref v) => v.hash(hasher),
             Document::Map(ref v) => v.hash(hasher),
             Document::Bytes(ref v) => v.hash(hasher),
+            Document::Unassigned => ().hash(hasher),
+            Document::Err(ref e) => format!("{}", e).hash(hasher),
         }
     }
 }
@@ -325,7 +331,37 @@ macro_rules! impl_is_as {
     };
 }
 
+macro_rules! impl_cast {
+    ($( $name:ident : $t:ty => $( $variant:ident ( $variant_ty:ident ) )* , )*) => {
+        $(
+            pub fn $name (self) -> Option< $t > {
+                match self {
+                    $( Document::$variant(v) => if v == (v as $t) as $variant_ty { Some(v as $t) } else { None }, )*
+                    _ => None,
+                }
+            }
+        )*
+    };
+}
+
 impl Document {
+    impl_cast! {
+        cast_i8 : i8 => I8(i8) I16(i16) I32(i32) I64(i64) I128(i128) U8(u8) U16(u16) U32(u32) U64(u64) U128(u128),
+        cast_i16 : i16 => I8(i8) I16(i16) I32(i32) I64(i64) I128(i128) U8(u8) U16(u16) U32(u32) U64(u64) U128(u128),
+        cast_i32 : i32 => I8(i8) I16(i16) I32(i32) I64(i64) I128(i128) U8(u8) U16(u16) U32(u32) U64(u64) U128(u128),
+        cast_i64 : i64 => I8(i8) I16(i16) I32(i32) I64(i64) I128(i128) U8(u8) U16(u16) U32(u32) U64(u64) U128(u128),
+        cast_i128 : i128 => I8(i8) I16(i16) I32(i32) I64(i64) I128(i128) U8(u8) U16(u16) U32(u32) U64(u64) U128(u128),
+        cast_isize : isize => I8(i8) I16(i16) I32(i32) I64(i64) I128(i128) U8(u8) U16(u16) U32(u32) U64(u64) U128(u128),
+        cast_u8 : u8 => I8(i8) I16(i16) I32(i32) I64(i64) I128(i128) U8(u8) U16(u16) U32(u32) U64(u64) U128(u128),
+        cast_u16 : u16 => I8(i8) I16(i16) I32(i32) I64(i64) I128(i128) U8(u8) U16(u16) U32(u32) U64(u64) U128(u128),
+        cast_u32 : u32 => I8(i8) I16(i16) I32(i32) I64(i64) I128(i128) U8(u8) U16(u16) U32(u32) U64(u64) U128(u128),
+        cast_u64 : u64 => I8(i8) I16(i16) I32(i32) I64(i64) I128(i128) U8(u8) U16(u16) U32(u32) U64(u64) U128(u128),
+        cast_u128 : u128 => I8(i8) I16(i16) I32(i32) I64(i64) I128(i128) U8(u8) U16(u16) U32(u32) U64(u64) U128(u128),
+        cast_usize : usize => I8(i8) I16(i16) I32(i32) I64(i64) I128(i128) U8(u8) U16(u16) U32(u32) U64(u64) U128(u128),
+        // cast_f32 : f32 => I8(i8) I16(i16) I32(i32) I64(i64) I128(i128) U8(u8) U16(u16) U32(u32) U64(u64) U128(u128) F32(f32) F64(f64),
+        // cast_f64 : f64 => I8(i8) I16(i16) I32(i32) I64(i64) I128(i128) U8(u8) U16(u16) U32(u32) U64(u64) U128(u128) F32(f32) F64(f64),
+    }
+
     impl_is_as! {
         is_i8,      as_i8,      take_i8,      I8,         i8;
         is_i16,     as_i16,     take_i16,     I16,        i16;
@@ -378,14 +414,11 @@ impl Document {
     }
 
     pub fn is_unit(&self) -> bool {
-        match self {
-            Document::Unit => true,
-            _ => false,
-        }
+        matches!(self, Document::Unit)
     }
 
     pub fn is_number(&self) -> bool {
-        match self {
+        matches!(self,
             Document::U8(_)
             | Document::U16(_)
             | Document::U32(_)
@@ -397,41 +430,35 @@ impl Document {
             | Document::I128(_)
             | Document::I64(_)
             | Document::F32(_)
-            | Document::F64(_) => true,
-            _ => false,
-        }
+            | Document::F64(_)
+        )
     }
 
     /// Returns true if the value is any signed integer (i8, i16, i32, i64)
     pub fn is_signed(&self) -> bool {
-        match self {
+        matches!(self,
             Document::I8(_)
             | Document::I16(_)
             | Document::I32(_)
             | Document::I64(_)
-            | Document::I128(_) => true,
-            _ => false,
-        }
+            | Document::I128(_)
+        )
     }
 
     /// Returns true if the value is any unsigned integer (u8, u16, u32, u64)
     pub fn is_unsigned(&self) -> bool {
-        match self {
+        matches!(self,
             Document::U8(_)
             | Document::U16(_)
             | Document::U32(_)
             | Document::U64(_)
-            | Document::U128(_) => true,
-            _ => false,
-        }
+            | Document::U128(_)
+        )
     }
 
     /// Returns true if the value is any float (f32, f64)
     pub fn is_float(&self) -> bool {
-        match self {
-            Document::F32(_) | Document::F64(_) => true,
-            _ => false,
-        }
+        matches!(self, Document::F32(_) | Document::F64(_))
     }
 
     pub fn as_usize(&self) -> Option<usize> {
@@ -476,6 +503,8 @@ impl Document {
             Document::Seq(..) => 18,
             Document::Map(..) => 19,
             Document::Bytes(..) => 20,
+            Document::Unassigned => 21,
+            Document::Err(..) => 22,
         }
     }
 
@@ -503,6 +532,8 @@ impl Document {
             Document::Seq(_) => serde::de::Unexpected::Seq,
             Document::Map(_) => serde::de::Unexpected::Map,
             Document::Bytes(ref b) => serde::de::Unexpected::Bytes(b),
+            Document::Unassigned => serde::de::Unexpected::Other("Unassigned"),
+            Document::Err(_) => serde::de::Unexpected::Other("Err"),
         }
     }
 
@@ -610,6 +641,8 @@ impl fmt::Display for Document {
                 fmt.write_str("}")
             }
             Document::Bytes(_) => fmt.write_str("b[...]"),
+            Document::Unassigned => fmt.write_str("(Unassigned)"),
+            Document::Err(e) => e.fmt(fmt),
         }
     }
 }

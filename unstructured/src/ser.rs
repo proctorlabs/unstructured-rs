@@ -55,6 +55,8 @@ impl ser::Serialize for Document {
             Document::Seq(ref v) => v.serialize(s),
             Document::Map(ref v) => v.serialize(s),
             Document::Bytes(ref v) => s.serialize_bytes(v),
+            Document::Unassigned => s.serialize_unit(),
+            Document::Err(ref e) => s.serialize_str(e.to_string().as_str()),
         }
     }
 }
