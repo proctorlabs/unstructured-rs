@@ -33,7 +33,7 @@ const MERGE2: &str = r#"{
 #[test]
 fn path_test() {
     let mut doc: Document = serde_json::from_str(MERGE1).unwrap();
-    println!("{}", doc.get_path(&[&"other".into(), &"array".into()]));
+    println!("{}", walk!(doc/"other"/"array"));//doc.get_path(&[&"other".into(), &"array".into()]));
     println!(
         "{}",
         doc.get_path(&[

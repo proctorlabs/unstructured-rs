@@ -9,6 +9,13 @@ macro_rules! anyvec {
 }
 
 #[macro_export]
+macro_rules! walk {
+    ($us:ident $( / $val:literal )*) => {
+        & $us $( [ $val ] )*
+    };
+}
+
+#[macro_export]
 macro_rules! foreach_numeric_primitive {
     ($($impl:tt)*) => {
         $($impl)* { u8 }
