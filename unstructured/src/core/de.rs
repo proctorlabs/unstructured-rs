@@ -1,10 +1,9 @@
 use serde::de;
-use std::collections::BTreeMap;
 use std::error::Error;
 use std::fmt;
 use std::marker::PhantomData;
 
-use crate::Document;
+use crate::*;
 
 #[derive(Debug)]
 pub enum Unexpected {
@@ -197,143 +196,148 @@ impl From<de::value::Error> for DeserializerError {
     }
 }
 
-pub struct DocumentVisitor;
+pub struct DocumentVisitor<T: UnstructuredDataTrait>(std::marker::PhantomData<T>);
 
-impl<'de> de::Visitor<'de> for DocumentVisitor {
-    type Value = Document;
+impl<'de, T: UnstructuredDataTrait> de::Visitor<'de> for DocumentVisitor<T> {
+    type Value = Unstructured<T>;
 
     fn expecting(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.write_str("any value")
     }
 
-    fn visit_bool<E>(self, value: bool) -> Result<Document, E> {
-        Ok(Document::Bool(value))
+    fn visit_bool<E>(self, value: bool) -> Result<Unstructured<T>, E> {
+        Ok(Unstructured::<T>::Bool(value))
     }
 
-    fn visit_i8<E>(self, value: i8) -> Result<Document, E> {
-        Ok(Document::I8(value))
+    fn visit_i8<E>(self, value: i8) -> Result<Unstructured<T>, E> {
+        Ok(Unstructured::<T>::Number(Number::I8(value)))
     }
 
-    fn visit_i16<E>(self, value: i16) -> Result<Document, E> {
-        Ok(Document::I16(value))
+    fn visit_i16<E>(self, value: i16) -> Result<Unstructured<T>, E> {
+        Ok(Unstructured::<T>::Number(Number::I16(value)))
     }
 
-    fn visit_i32<E>(self, value: i32) -> Result<Document, E> {
-        Ok(Document::I32(value))
+    fn visit_i32<E>(self, value: i32) -> Result<Unstructured<T>, E> {
+        Ok(Unstructured::<T>::Number(Number::I32(value)))
     }
 
-    fn visit_i64<E>(self, value: i64) -> Result<Document, E> {
-        Ok(Document::I64(value))
+    fn visit_i64<E>(self, value: i64) -> Result<Unstructured<T>, E> {
+        Ok(Unstructured::<T>::Number(Number::I64(value)))
     }
 
-    fn visit_i128<E>(self, value: i128) -> Result<Document, E> {
-        Ok(Document::I128(value))
+    fn visit_i128<E>(self, value: i128) -> Result<Unstructured<T>, E> {
+        Ok(Unstructured::<T>::Number(Number::I128(value)))
     }
 
-    fn visit_u8<E>(self, value: u8) -> Result<Document, E> {
-        Ok(Document::U8(value))
+    fn visit_u8<E>(self, value: u8) -> Result<Unstructured<T>, E> {
+        Ok(Unstructured::<T>::Number(Number::U8(value)))
     }
 
-    fn visit_u16<E>(self, value: u16) -> Result<Document, E> {
-        Ok(Document::U16(value))
+    fn visit_u16<E>(self, value: u16) -> Result<Unstructured<T>, E> {
+        Ok(Unstructured::<T>::Number(Number::U16(value)))
     }
 
-    fn visit_u32<E>(self, value: u32) -> Result<Document, E> {
-        Ok(Document::U32(value))
+    fn visit_u32<E>(self, value: u32) -> Result<Unstructured<T>, E> {
+        Ok(Unstructured::<T>::Number(Number::U32(value)))
     }
 
-    fn visit_u64<E>(self, value: u64) -> Result<Document, E> {
-        Ok(Document::U64(value))
+    fn visit_u64<E>(self, value: u64) -> Result<Unstructured<T>, E> {
+        Ok(Unstructured::<T>::Number(Number::U64(value)))
     }
 
-    fn visit_u128<E>(self, value: u128) -> Result<Document, E> {
-        Ok(Document::U128(value))
+    fn visit_u128<E>(self, value: u128) -> Result<Unstructured<T>, E> {
+        Ok(Unstructured::<T>::Number(Number::U128(value)))
     }
 
-    fn visit_f32<E>(self, value: f32) -> Result<Document, E> {
-        Ok(Document::F32(value))
+    fn visit_f32<E>(self, value: f32) -> Result<Unstructured<T>, E> {
+        Ok(Unstructured::<T>::Number(Number::F32(value)))
     }
 
-    fn visit_f64<E>(self, value: f64) -> Result<Document, E> {
-        Ok(Document::F64(value))
+    fn visit_f64<E>(self, value: f64) -> Result<Unstructured<T>, E> {
+        Ok(Unstructured::<T>::Number(Number::F64(value)))
     }
 
-    fn visit_char<E>(self, value: char) -> Result<Document, E> {
-        Ok(Document::Char(value))
+    fn visit_char<E>(self, value: char) -> Result<Unstructured<T>, E> {
+        Ok(Unstructured::<T>::Char(value))
     }
 
-    fn visit_str<E>(self, value: &str) -> Result<Document, E> {
-        Ok(Document::String(value.into()))
+    fn visit_str<E>(self, value: &str) -> Result<Unstructured<T>, E> {
+        Ok(Unstructured::<T>::String(value.into()))
     }
 
-    fn visit_string<E>(self, value: String) -> Result<Document, E> {
-        Ok(Document::String(value))
+    fn visit_string<E>(self, value: String) -> Result<Unstructured<T>, E> {
+        Ok(Unstructured::<T>::String(value))
     }
 
-    fn visit_unit<E>(self) -> Result<Document, E> {
-        Ok(Document::Unit)
+    fn visit_unit<E>(self) -> Result<Unstructured<T>, E> {
+        Ok(Unstructured::<T>::Null)
     }
 
-    fn visit_none<E>(self) -> Result<Document, E> {
-        Ok(Document::Option(None))
+    fn visit_none<E>(self) -> Result<Unstructured<T>, E> {
+        Ok(Unstructured::<T>::Option(None))
     }
 
-    fn visit_some<D: de::Deserializer<'de>>(self, d: D) -> Result<Document, D::Error> {
-        d.deserialize_any(DocumentVisitor)
-            .map(|v| Document::Option(Some(Box::new(v))))
+    fn visit_some<D: de::Deserializer<'de>>(self, d: D) -> Result<Unstructured<T>, D::Error> {
+        d.deserialize_any(DocumentVisitor::<T>(PhantomData))
+            .map(|v| Unstructured::<T>::Option(Some(Box::new(v))))
     }
 
-    fn visit_newtype_struct<D: de::Deserializer<'de>>(self, d: D) -> Result<Document, D::Error> {
-        d.deserialize_any(DocumentVisitor)
-            .map(|v| Document::Newtype(Box::new(v)))
+    fn visit_newtype_struct<D: de::Deserializer<'de>>(
+        self,
+        d: D,
+    ) -> Result<Unstructured<T>, D::Error> {
+        d.deserialize_any(DocumentVisitor::<T>(PhantomData))
+            .map(|v| Unstructured::<T>::Newtype(Box::new(v)))
     }
 
-    fn visit_seq<V: de::SeqAccess<'de>>(self, mut visitor: V) -> Result<Document, V::Error> {
+    fn visit_seq<V: de::SeqAccess<'de>>(self, mut visitor: V) -> Result<Unstructured<T>, V::Error> {
         let mut documents = Vec::new();
         while let Some(elem) = visitor.next_element()? {
             documents.push(elem);
         }
-        Ok(Document::Seq(documents))
+        Ok(Unstructured::<T>::Seq(documents))
     }
 
-    fn visit_map<V: de::MapAccess<'de>>(self, mut visitor: V) -> Result<Document, V::Error> {
-        let mut documents = BTreeMap::new();
+    fn visit_map<V: de::MapAccess<'de>>(self, mut visitor: V) -> Result<Unstructured<T>, V::Error> {
+        let mut documents = Mapping::new();
         while let Some((key, document)) = visitor.next_entry()? {
             documents.insert(key, document);
         }
-        Ok(Document::Map(documents))
+        Ok(Unstructured::<T>::Map(documents))
     }
 
-    fn visit_bytes<E>(self, v: &[u8]) -> Result<Document, E> {
-        Ok(Document::Bytes(v.into()))
+    fn visit_bytes<E>(self, v: &[u8]) -> Result<Unstructured<T>, E> {
+        Ok(Unstructured::<T>::Bytes(v.into()))
     }
 
-    fn visit_byte_buf<E>(self, v: Vec<u8>) -> Result<Document, E> {
-        Ok(Document::Bytes(v))
+    fn visit_byte_buf<E>(self, v: Vec<u8>) -> Result<Unstructured<T>, E> {
+        Ok(Unstructured::<T>::Bytes(v))
     }
 }
 
-impl<'de> de::Deserialize<'de> for Document {
+impl<'de, T: UnstructuredDataTrait> de::Deserialize<'de> for Unstructured<T> {
     fn deserialize<D: de::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-        d.deserialize_any(DocumentVisitor)
+        d.deserialize_any(DocumentVisitor::<T>(PhantomData))
     }
 }
 
-impl<'de> de::IntoDeserializer<'de, DeserializerError> for Document {
-    type Deserializer = Document;
+impl<'de, T: UnstructuredDataTrait> de::IntoDeserializer<'de, DeserializerError>
+    for Unstructured<T>
+{
+    type Deserializer = Unstructured<T>;
 
-    fn into_deserializer(self) -> Document {
+    fn into_deserializer(self) -> Unstructured<T> {
         self
     }
 }
 
-pub struct DocumentDeserializer<E> {
-    document: Document,
+pub struct DocumentDeserializer<E, T: UnstructuredDataTrait> {
+    document: Unstructured<T>,
     error: PhantomData<fn() -> E>,
 }
 
-impl<E> DocumentDeserializer<E> {
-    pub fn new(document: Document) -> Self {
+impl<E, T: UnstructuredDataTrait> DocumentDeserializer<E, T> {
+    pub fn new(document: Unstructured<T>) -> Self {
         DocumentDeserializer {
             document,
             error: Default::default(),
@@ -341,7 +345,7 @@ impl<E> DocumentDeserializer<E> {
     }
 }
 
-impl<'de, E> de::Deserializer<'de> for DocumentDeserializer<E>
+impl<'de, E, T: UnstructuredDataTrait> de::Deserializer<'de> for DocumentDeserializer<E, T>
 where
     E: de::Error,
 {
@@ -349,42 +353,38 @@ where
 
     fn deserialize_any<V: de::Visitor<'de>>(self, visitor: V) -> Result<V::Value, Self::Error> {
         match self.document {
-            Document::Bool(v) => visitor.visit_bool(v),
-            Document::U8(v) => visitor.visit_u8(v),
-            Document::U16(v) => visitor.visit_u16(v),
-            Document::U32(v) => visitor.visit_u32(v),
-            Document::U64(v) => visitor.visit_u64(v),
-            Document::U128(v) => visitor.visit_u128(v),
-            Document::I8(v) => visitor.visit_i8(v),
-            Document::I16(v) => visitor.visit_i16(v),
-            Document::I32(v) => visitor.visit_i32(v),
-            Document::I64(v) => visitor.visit_i64(v),
-            Document::I128(v) => visitor.visit_i128(v),
-            Document::F32(v) => visitor.visit_f32(v),
-            Document::F64(v) => visitor.visit_f64(v),
-            Document::Char(v) => visitor.visit_char(v),
-            Document::String(v) => visitor.visit_string(v),
-            Document::Unit => visitor.visit_unit(),
-            Document::Option(None) => visitor.visit_none(),
-            Document::Option(Some(v)) => visitor.visit_some(DocumentDeserializer::new(*v)),
-            Document::Newtype(v) => visitor.visit_newtype_struct(DocumentDeserializer::new(*v)),
-            Document::Seq(v) => visitor.visit_seq(de::value::SeqDeserializer::new(
+            Unstructured::<T>::Bool(v) => visitor.visit_bool(v),
+            Unstructured::<T>::Number(v) => Ok(v.deserialize_any(visitor).unwrap()),
+            Unstructured::<T>::Char(v) => visitor.visit_char(v),
+            Unstructured::<T>::String(v) => visitor.visit_string(v),
+            Unstructured::<T>::Null => visitor.visit_unit(),
+            Unstructured::<T>::Option(None) => visitor.visit_none(),
+            Unstructured::<T>::Option(Some(v)) => visitor.visit_some(DocumentDeserializer::new(*v)),
+            Unstructured::<T>::Newtype(v) => {
+                visitor.visit_newtype_struct(DocumentDeserializer::new(*v))
+            }
+            Unstructured::<T>::Seq(v) => visitor.visit_seq(de::value::SeqDeserializer::new(
                 v.into_iter().map(DocumentDeserializer::new),
             )),
-            Document::Map(v) => visitor
+            Unstructured::<T>::Map(v) => visitor
                 .visit_map(de::value::MapDeserializer::new(v.into_iter().map(
                     |(k, v)| (DocumentDeserializer::new(k), DocumentDeserializer::new(v)),
                 ))),
-            Document::Bytes(v) => visitor.visit_byte_buf(v),
-            Document::Unassigned => visitor.visit_unit(),
-            Document::Err(e) => Err(DeserializerError::Custom(format!("{}", e)).to_error()),
+            Unstructured::<T>::Bytes(v) => visitor.visit_byte_buf(v),
+            Unstructured::<T>::Unassigned => visitor.visit_unit(),
+            Unstructured::<T>::Err(e) => {
+                Err(DeserializerError::Custom(format!("{}", e)).to_error())
+            }
+            Unstructured::<T>::Other(..) => {
+                Err(DeserializerError::Custom("other".into()).to_error())
+            }
         }
     }
 
     fn deserialize_option<V: de::Visitor<'de>>(self, visitor: V) -> Result<V::Value, Self::Error> {
         match self.document {
-            Document::Option(..) => self.deserialize_any(visitor),
-            Document::Unit => visitor.visit_unit(),
+            Unstructured::<T>::Option(..) => self.deserialize_any(visitor),
+            Unstructured::<T>::Null => visitor.visit_unit(),
             _ => visitor.visit_some(self),
         }
     }
@@ -396,7 +396,7 @@ where
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
         let (variant, document) = match self.document {
-            Document::Map(document) => {
+            Unstructured::<T>::Map(document) => {
                 let mut iter = document.into_iter();
                 let (variant, document) = match iter.next() {
                     Some(v) => v,
@@ -416,7 +416,7 @@ where
                 }
                 (variant, Some(document))
             }
-            Document::String(variant) => (Document::String(variant), None),
+            Unstructured::<T>::String(variant) => (Unstructured::<T>::String(variant), None),
             other => {
                 return Err(de::Error::invalid_type(
                     other.unexpected(),
@@ -439,7 +439,9 @@ where
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
         match self.document {
-            Document::Newtype(v) => visitor.visit_newtype_struct(DocumentDeserializer::new(*v)),
+            Unstructured::<T>::Newtype(v) => {
+                visitor.visit_newtype_struct(DocumentDeserializer::new(*v))
+            }
             _ => visitor.visit_newtype_struct(self),
         }
     }
@@ -451,7 +453,7 @@ where
     }
 }
 
-impl<'de, E> de::IntoDeserializer<'de, E> for DocumentDeserializer<E>
+impl<'de, E, T: UnstructuredDataTrait> de::IntoDeserializer<'de, E> for DocumentDeserializer<E, T>
 where
     E: de::Error,
 {
@@ -462,7 +464,7 @@ where
     }
 }
 
-impl<'de> de::Deserializer<'de> for Document {
+impl<'de, T: UnstructuredDataTrait> de::Deserializer<'de> for Unstructured<T> {
     type Error = DeserializerError;
 
     fn deserialize_any<V: de::Visitor<'de>>(self, visitor: V) -> Result<V::Value, Self::Error> {
@@ -497,24 +499,24 @@ impl<'de> de::Deserializer<'de> for Document {
     }
 }
 
-struct EnumDeserializer<E> {
-    variant: Document,
-    document: Option<Document>,
+struct EnumDeserializer<E, T: UnstructuredDataTrait> {
+    variant: Unstructured<T>,
+    document: Option<Unstructured<T>>,
     error: PhantomData<fn() -> E>,
 }
 
 #[allow(clippy::type_complexity)]
-impl<'de, E> de::EnumAccess<'de> for EnumDeserializer<E>
+impl<'de, E, T: UnstructuredDataTrait> de::EnumAccess<'de> for EnumDeserializer<E, T>
 where
     E: de::Error,
 {
     type Error = E;
-    type Variant = VariantDeserializer<Self::Error>;
+    type Variant = VariantDeserializer<Self::Error, T>;
 
     fn variant_seed<V>(
         self,
         seed: V,
-    ) -> Result<(V::Value, VariantDeserializer<Self::Error>), Self::Error>
+    ) -> Result<(V::Value, VariantDeserializer<Self::Error, T>), Self::Error>
     where
         V: de::DeserializeSeed<'de>,
     {
@@ -527,12 +529,12 @@ where
     }
 }
 
-struct VariantDeserializer<E> {
-    document: Option<Document>,
+struct VariantDeserializer<E, T: UnstructuredDataTrait> {
+    document: Option<Unstructured<T>>,
     error: PhantomData<fn() -> E>,
 }
 
-impl<'de, E> de::VariantAccess<'de> for VariantDeserializer<E>
+impl<'de, E, T: UnstructuredDataTrait> de::VariantAccess<'de> for VariantDeserializer<E, T>
 where
     E: de::Error,
 {
@@ -545,9 +547,9 @@ where
         }
     }
 
-    fn newtype_variant_seed<T>(self, seed: T) -> Result<T::Value, Self::Error>
+    fn newtype_variant_seed<Q>(self, seed: Q) -> Result<Q::Value, Self::Error>
     where
-        T: de::DeserializeSeed<'de>,
+        Q: de::DeserializeSeed<'de>,
     {
         match self.document {
             Some(document) => seed.deserialize(DocumentDeserializer::new(document)),
@@ -563,7 +565,7 @@ where
         V: de::Visitor<'de>,
     {
         match self.document {
-            Some(Document::Seq(v)) => de::Deserializer::deserialize_any(
+            Some(Unstructured::<T>::Seq(v)) => de::Deserializer::deserialize_any(
                 de::value::SeqDeserializer::new(v.into_iter().map(DocumentDeserializer::new)),
                 visitor,
             ),
@@ -587,7 +589,7 @@ where
         V: de::Visitor<'de>,
     {
         match self.document {
-            Some(Document::Map(v)) => de::Deserializer::deserialize_any(
+            Some(Unstructured::<T>::Map(v)) => de::Deserializer::deserialize_any(
                 de::value::MapDeserializer::new(
                     v.into_iter()
                         .map(|(k, v)| (DocumentDeserializer::new(k), DocumentDeserializer::new(v))),
