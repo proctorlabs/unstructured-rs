@@ -185,3 +185,31 @@ impl<T: UnstructuredDataTrait> DocumentConvertible<T> for String {
         }
     }
 }
+
+impl<T: UnstructuredDataTrait> DocumentConvertible<T> for bool {
+    fn into_unstructured(self) -> Unstructured<T> {
+        Unstructured::<T>::Bool(self)
+    }
+
+    fn into_native(val: Unstructured<T>) -> Option<Self> {
+        match val {
+            Unstructured::<T>::Bool(v) => Some(v),
+            _ => None,
+        }
+    }
+
+    fn is(val: &Unstructured<T>) -> bool {
+        matches!(val, Unstructured::<T>::Bool(_))
+    }
+
+    fn castable(val: &Unstructured<T>) -> bool {
+        matches!(val, Unstructured::<T>::Bool(_))
+    }
+
+    fn cast(val: Unstructured<T>) -> Option<Self> {
+        match val {
+            Unstructured::<T>::Bool(m) => Some(m),
+            _ => None,
+        }
+    }
+}
